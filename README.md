@@ -6,21 +6,7 @@
 
 Extensive utilities for extracting typed values from `map[string]interface{}` (commonly used for JSON objects in Go) with type safety, default values, and error handling.
 
-This library is designed to help working with loosely typed data structures (like parsed JSON or YAML) in a safer and more ergonomic way.
-
-## Justification for `Must` (Panic) Patterns
-
-This library provides `Must*` functions that panic on error. While idiomatic Go prefers returning errors, there are specific scenarios where panicking is appropriate or preferred for developer ergonomics, especially when:
-
-1.  **Configuration Loading**: When an application starts, if essential configuration is missing or invalid, it is often better to fail fast (panic) than to proceed with a broken state. `Must` functions simplify this code by removing the need for verbose error checking for every single property.
-2.  **Consistency**: This library aims for consistency with sister libraries in other languages:
-    *   [tsobjectutils](https://github.com/arran4/tsobjectutils) (TypeScript)
-    *   [dartobjectutils](https://github.com/arran4/dartobjectutils) (Dart)
-
-    These libraries use similar patterns to assert presence and type of fields.
-3.  **Chaining/Inlining**: `Must` functions return the value directly, allowing them to be used inline in expressions or struct initialization literals where multi-value returns are not permitted.
-
-**However**, for general library usage or handling user input where failure is expected and recoverable, **you should use the error-returning versions** (e.g., `GetString`) as the primary way of interacting with this library.
+This library is designed to help working with loosely typed data structures (like parsed JSON or YAML) in a safer and more ergonomic way, providing a bridge between dynamic data and Go's static typing.
 
 ## Installation
 
@@ -28,126 +14,243 @@ This library provides `Must*` functions that panic on error. While idiomatic Go 
 go get github.com/arran4/go-objectutils
 ```
 
-## Usage
+## Concept: Error Handling Patterns
 
-### Primitives
+This library offers three primary ways to access data, allowing you to choose the best strategy for your specific use case (e.g., failing fast, safe handling, or default fallbacks).
 
-The library supports all Go primitive types: `string`, `int`, `int64`, `float64`, `bool`, etc.
+### 1. Error Returning (`Get*`)
 
-#### Error Returning (Recommended)
+**Use Case:** General application logic where missing data is expected or recoverable.
 
-Use these functions when you want to handle errors gracefully.
+These functions return the value and an `error`. The error will be `*MissingFieldError` if the key doesn't exist, or `*InvalidTypeError` if the value cannot be converted to the target type.
 
 ```go
-import "github.com/arran4/go-objectutils"
-
-data := map[string]interface{}{
-    "name": "John",
-    "age":  30,
-}
-
-name, err := go_objectutils.GetString(data, "name")
+val, err := go_objectutils.GetString(data, "key")
 if err != nil {
-    // handle missing or invalid type
-}
-
-age, err := go_objectutils.GetNumber[int](data, "age")
-if err != nil {
-    // handle error
+    // Handle error
 }
 ```
 
-#### Must (Panic)
+### 2. Panic (`MustGet*`)
 
-Use these when you want to fail fast if the data is invalid.
+**Use Case:** Configuration loading, scripts, or scenarios where the application cannot proceed without this data. Fails fast.
+
+These functions return the value directly but will `panic` if an error occurs. This keeps the code concise when safety is guaranteed by other means or when crashing is the desired behavior on failure.
 
 ```go
-name := go_objectutils.MustGetString(data, "name")
-age := go_objectutils.MustGetNumber[int](data, "age")
+val := go_objectutils.MustGetString(data, "key")
 ```
 
-#### Default Values
+### 3. Default Values (`Get*OrDefault`)
 
-Use these to provide a fallback if the property is missing or invalid.
+**Use Case:** Optional configuration, UI rendering where defaults are acceptable.
+
+These functions return the value if found and valid; otherwise, they return the provided default value. Errors are swallowed.
 
 ```go
-// Returns "Guest" if "name" is missing
-name := go_objectutils.GetStringOrDefault(data, "name", "Guest")
-
-// Returns 0 if "count" is missing
-count := go_objectutils.GetNumberOrDefault(data, "count", 0)
+val := go_objectutils.GetStringOrDefault(data, "key", "default")
 ```
 
-### Pointers
+### 4. Pointers (`Get*Ptr`)
 
-You can retrieve pointers to values, which is useful for distinguishing between "missing/null" (nil pointer) and "zero value" (e.g., empty string or 0).
-
-```go
-// Returns *string, or error
-namePtr, err := go_objectutils.GetStringPtr(data, "name")
-
-// Returns *int, panics on error
-agePtr := go_objectutils.MustGetNumberPtr[int](data, "age")
-```
-
-### Arrays / Slices
+**Use Case:** Distinguishing between a "zero value" (e.g., `""`, `0`, `false`) and a "missing/null" value.
 
 ```go
-data := map[string]interface{}{
-    "tags": []interface{}{"go", "json"},
+valPtr, err := go_objectutils.GetStringPtr(data, "key")
+if valPtr == nil {
+    // Key was missing or null
 }
-
-tags, err := go_objectutils.GetStringArray(data, "tags")
-// tags is []string{"go", "json"}
 ```
 
-### Nested Objects
+## Function Listing
 
-```go
-data := map[string]interface{}{
-    "user": map[string]interface{}{
-        "id": 123,
-    },
-}
+### Strings
 
-userObj, err := go_objectutils.GetObject[map[string]interface{}](data, "user")
-```
+| Function | Description |
+| :--- | :--- |
+| `GetString` | Returns `string` or error. |
+| `MustGetString` | Returns `string` or panics. |
+| `GetStringOrDefault` | Returns `string` or default value. |
+| `GetStringPtr` | Returns `*string` or error. |
+| `MustGetStringPtr` | Returns `*string` or panics. |
+| `GetStringPtrOrDefault` | Returns `*string` or default value. |
+
+### Numbers (Generics)
+
+Supports `int`, `int8`...`int64`, `uint`...`uint64`, `float32`, `float64`.
+*Note: Also handles automatic conversion from string representations of numbers.*
+
+| Function | Description |
+| :--- | :--- |
+| `GetNumber[T]` | Returns number of type `T` or error. |
+| `MustGetNumber[T]` | Returns number of type `T` or panics. |
+| `GetNumberOrDefault[T]` | Returns number of type `T` or default value. |
+| `GetNumberPtr[T]` | Returns `*T` or error. |
+| `MustGetNumberPtr[T]` | Returns `*T` or panics. |
+| `GetNumberPtrOrDefault[T]` | Returns `*T` or default value. |
+
+### Booleans
+
+| Function | Description |
+| :--- | :--- |
+| `GetBoolean` | Returns `bool` or error. |
+| `MustGetBoolean` | Returns `bool` or panics. |
+| `GetBooleanOrDefault` | Returns `bool` or default value. |
+| `GetBooleanPtr` | Returns `*bool` or error. |
+| `MustGetBooleanPtr` | Returns `*bool` or panics. |
+| `GetBooleanPtrOrDefault` | Returns `*bool` or default value. |
 
 ### Dates
 
-Dates are parsed from strings (RFC3339/ISO8601) or timestamps (int/float).
+Parses `time.Time` from strings (RFC3339) or timestamps (int/float milliseconds).
+
+| Function | Description |
+| :--- | :--- |
+| `GetDate` | Returns `time.Time` or error. |
+| `MustGetDate` | Returns `time.Time` or panics. |
+| `GetDateOrDefault` | Returns `time.Time` or default value. |
+| `GetDatePtr` | Returns `*time.Time` or error. |
+| `MustGetDatePtr` | Returns `*time.Time` or panics. |
+| `GetDatePtrOrDefault` | Returns `*time.Time` or default value. |
+
+### BigInt
+
+Extracts `math/big.Int` from strings or numbers.
+
+| Function | Description |
+| :--- | :--- |
+| `GetBigInt` | Returns `*big.Int` or error. |
+| `MustGetBigInt` | Returns `*big.Int` or panics. |
+| `GetBigIntOrDefault` | Returns `*big.Int` or default value. |
+
+### Arrays / Slices
+
+| Function | Description |
+| :--- | :--- |
+| `GetStringArray` | Returns `[]string` or error. |
+| `MustGetStringArray` | Returns `[]string` or panics. |
+| `GetStringArrayOrDefault` | Returns `[]string` or default value. |
+| `GetDateArray` | Returns `[]time.Time` or error. |
+| `MustGetDateArray` | Returns `[]time.Time` or panics. |
+| `GetDateArrayOrDefault` | Returns `[]time.Time` or default value. |
+| `GetObjectArray[T]` | Returns `[]T` or error. Useful for lists of sub-objects. |
+| `MustGetObjectArray[T]` | Returns `[]T` or panics. |
+| `GetObjectArrayOrDefault[T]` | Returns `[]T` or default value. |
+
+### Objects / Maps
+
+| Function | Description |
+| :--- | :--- |
+| `GetObject[T]` | Returns object cast to type `T` (usually `map[string]interface{}`) or error. |
+| `MustGetObject[T]` | Returns object cast to type `T` or panics. |
+| `GetObjectOrDefault[T]` | Returns object cast to type `T` or default value. |
+| `GetObjectPtr[T]` | Returns `*T` or error. |
+| `MustGetObjectPtr[T]` | Returns `*T` or panics. |
+| `GetObjectPtrOrDefault[T]` | Returns `*T` or default value. |
+| `GetMap[K, V]` | Returns `map[K]V` or error. |
+| `MustGetMap[K, V]` | Returns `map[K]V` or panics. |
+
+## Use Cases & Examples
+
+### Scenario 1: Parsing Configuration
+
+When loading a configuration file (e.g., parsed from JSON), you often want to fail if required fields are missing and use defaults for others.
+
+```go
+configData := map[string]interface{}{
+    "host": "localhost",
+    "port": 8080,
+    // "timeout": missing, will use default
+}
+
+// Fail if host is missing
+host := go_objectutils.MustGetString(configData, "host")
+
+// Fail if port is missing or not a number
+port := go_objectutils.MustGetNumber[int](configData, "port")
+
+// Use default if timeout is missing
+timeout := go_objectutils.GetNumberOrDefault[int](configData, "timeout", 30)
+```
+
+### Scenario 2: Handling API Responses
+
+When processing an external API response, you should handle potential schema changes gracefully using the error-returning functions.
+
+```go
+response := map[string]interface{}{
+    "user": map[string]interface{}{
+        "id": "12345",
+        "active": true,
+    },
+    "tags": []interface{}{"admin", "editor"},
+}
+
+// Safely access nested object
+if userMap, err := go_objectutils.GetObject[map[string]interface{}](response, "user"); err == nil {
+    // Note: ID is a string in JSON but we want an int
+    id, _ := go_objectutils.GetNumber[int](userMap, "id")
+
+    active := go_objectutils.GetBooleanOrDefault(userMap, "active", false)
+    fmt.Printf("User ID: %d, Active: %v\n", id, active)
+}
+
+// Safely access array
+tags, _ := go_objectutils.GetStringArrayOrDefault(response, "tags", []string{})
+```
+
+### Scenario 3: Nullable Fields (Pointers)
+
+Use pointer variants to check if a field was explicitly set to null or missing, versus just being the zero value.
+
+```go
+updateData := map[string]interface{}{
+    "description": "",   // User wants to clear description
+    "age": nil,         // User didn't update age
+}
+
+// Check description
+descPtr, _ := go_objectutils.GetStringPtr(updateData, "description")
+if descPtr != nil {
+    fmt.Printf("Updating description to: '%s'\n", *descPtr)
+}
+
+// Check age
+agePtr, _ := go_objectutils.GetNumberPtr[int](updateData, "age")
+if agePtr == nil {
+    fmt.Println("Age not updated")
+}
+```
+
+### Scenario 4: Custom Object Mapping
+
+You can use `GetObjectArray` with a constructor function approach (via legacy helpers or manual iteration) or simple type casting if your structures match.
 
 ```go
 data := map[string]interface{}{
-    "created_at": "2023-10-01T12:00:00Z",
+    "users": []interface{}{
+        map[string]interface{}{"name": "Alice"},
+        map[string]interface{}{"name": "Bob"},
+    },
 }
 
-createdAt, err := go_objectutils.GetDate(data, "created_at")
-// createdAt is time.Time
+// Extract list of user maps
+users := go_objectutils.GetObjectArrayOrDefault[map[string]interface{}](data, "users", nil)
+
+for _, u := range users {
+    name := go_objectutils.GetStringOrDefault(u, "name", "Unknown")
+    fmt.Println(name)
+}
 ```
 
-## API Reference
+## Legacy Functions
 
-The library follows a consistent naming convention:
+The library includes several legacy functions for backward compatibility. These are generally more verbose aliases or specific utility wrappers.
 
-*   `Get<Type>(props, key) (<Type>, error)`
-*   `MustGet<Type>(props, key) <Type>`
-*   `Get<Type>OrDefault(props, key, default) <Type>`
-*   `Get<Type>Ptr(props, key) (*<Type>, error)`
-*   `MustGet<Type>Ptr(props, key) *<Type>`
-
-Supported Types:
-*   `String`
-*   `Number` (Generics: `int`, `float64`, etc.)
-*   `Boolean`
-*   `Date` (`time.Time`)
-*   `StringArray`
-*   `ObjectArray`
-*   `DateArray`
-*   `Object` / `Map`
-
-## Error Handling
-
-Errors returned are typed:
-*   `*go_objectutils.MissingFieldError`: The property does not exist.
-*   `*go_objectutils.InvalidTypeError`: The property exists but is not of the expected type.
+*   `GetStringPropOrDefault` -> `GetStringOrDefault`
+*   `GetNumberPropOrDefault` -> `GetNumberOrDefault`
+*   `GetBooleanPropOrDefault` -> `GetBooleanOrDefault`
+*   `GetDatePropOrDefault` -> `GetDateOrDefault`
+*   `GetObjectPropOrDefault` -> `GetObjectOrDefault`
+*   `GetStringPropOrThrow`, `GetNumberPropOrThrow`, etc. -> Custom error message wrappers around `Get*`.
+*   `Get*PropOrDefaultFunction` -> Uses a function to generate the default value (lazy evaluation).
