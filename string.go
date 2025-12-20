@@ -1,50 +1,91 @@
 package go_objectutils
 
-// GetStringPropOrDefault retrieves a string property or returns a default value.
-func GetStringPropOrDefault(props map[string]interface{}, prop string, defaultValue string) string {
+// GetString retrieves a string property.
+// It returns an error if the property is missing or not a string.
+func GetString(props map[string]interface{}, prop string) (string, error) {
 	if props == nil {
-		return defaultValue
+		return "", &MissingFieldError{Prop: prop}
 	}
 	val, ok := props[prop]
 	if !ok {
-		return defaultValue
+		return "", &MissingFieldError{Prop: prop}
 	}
 	if strVal, ok := val.(string); ok {
-		return strVal
+		return strVal, nil
 	}
-	return defaultValue
+	return "", &InvalidTypeError{Prop: prop, Expected: "string", Actual: val}
+}
+
+// MustGetString retrieves a string property or panics.
+func MustGetString(props map[string]interface{}, prop string) string {
+	val, err := GetString(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetStringOrDefault retrieves a string property or returns a default value.
+func GetStringOrDefault(props map[string]interface{}, prop string, defaultValue string) string {
+	val, err := GetString(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// GetStringPtr retrieves a string property as a pointer.
+func GetStringPtr(props map[string]interface{}, prop string) (*string, error) {
+	val, err := GetString(props, prop)
+	if err != nil {
+		return nil, err
+	}
+	return &val, nil
+}
+
+// MustGetStringPtr retrieves a string property as a pointer or panics.
+func MustGetStringPtr(props map[string]interface{}, prop string) *string {
+	val, err := GetStringPtr(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetStringPtrOrDefault retrieves a string property as a pointer or returns a default value.
+func GetStringPtrOrDefault(props map[string]interface{}, prop string, defaultValue *string) *string {
+	val, err := GetStringPtr(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// Legacy aliases or extended functionality
+
+// GetStringPropOrDefault is an alias for GetStringOrDefault
+func GetStringPropOrDefault(props map[string]interface{}, prop string, defaultValue string) string {
+	return GetStringOrDefault(props, prop, defaultValue)
 }
 
 // GetStringPropOrDefaultFunction retrieves a string property or returns a value from a default function.
 func GetStringPropOrDefaultFunction(props map[string]interface{}, prop string, defaultFunction func() string) string {
-	if props == nil {
+	val, err := GetString(props, prop)
+	if err != nil {
 		return defaultFunction()
 	}
-	val, ok := props[prop]
-	if !ok {
-		return defaultFunction()
-	}
-	if strVal, ok := val.(string); ok {
-		return strVal
-	}
-	return defaultFunction()
+	return val
 }
 
-// GetStringPropOrThrow retrieves a string property or panics if missing/invalid.
+// GetStringPropOrThrow behaves like MustGetString but allows a custom message.
 func GetStringPropOrThrow(props map[string]interface{}, prop string, message ...string) string {
-	msg := "Property " + prop + " is missing or not a string"
-	if len(message) > 0 {
-		msg = message[0]
-	}
-	if props == nil {
+	val, err := GetString(props, prop)
+	if err != nil {
+		msg := err.Error()
+		if len(message) > 0 {
+			msg = message[0]
+		}
 		panic(msg)
 	}
-	val, ok := props[prop]
-	if !ok {
-		panic(msg)
-	}
-	if strVal, ok := val.(string); ok {
-		return strVal
-	}
-	panic(msg)
+	return val
 }

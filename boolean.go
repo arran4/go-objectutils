@@ -1,56 +1,95 @@
 package go_objectutils
 
-// GetBooleanPropOrDefault retrieves a boolean property or returns a default value.
-func GetBooleanPropOrDefault(props map[string]interface{}, prop string, defaultValue bool) bool {
+// GetBoolean retrieves a boolean property.
+func GetBoolean(props map[string]interface{}, prop string) (bool, error) {
 	if props == nil {
-		return defaultValue
+		return false, &MissingFieldError{Prop: prop}
 	}
 	val, ok := props[prop]
 	if !ok {
-		return defaultValue
+		return false, &MissingFieldError{Prop: prop}
 	}
 	if boolVal, ok := val.(bool); ok {
-		return boolVal
+		return boolVal, nil
 	}
-	return defaultValue
+	return false, &InvalidTypeError{Prop: prop, Expected: "bool", Actual: val}
+}
+
+// MustGetBoolean retrieves a boolean property or panics.
+func MustGetBoolean(props map[string]interface{}, prop string) bool {
+	val, err := GetBoolean(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetBooleanOrDefault retrieves a boolean property or returns a default value.
+func GetBooleanOrDefault(props map[string]interface{}, prop string, defaultValue bool) bool {
+	val, err := GetBoolean(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// GetBooleanPtr retrieves a boolean property as a pointer.
+func GetBooleanPtr(props map[string]interface{}, prop string) (*bool, error) {
+	val, err := GetBoolean(props, prop)
+	if err != nil {
+		return nil, err
+	}
+	return &val, nil
+}
+
+// MustGetBooleanPtr retrieves a boolean property as a pointer or panics.
+func MustGetBooleanPtr(props map[string]interface{}, prop string) *bool {
+	val, err := GetBooleanPtr(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetBooleanPtrOrDefault retrieves a boolean property as a pointer or returns a default value.
+func GetBooleanPtrOrDefault(props map[string]interface{}, prop string, defaultValue *bool) *bool {
+	val, err := GetBooleanPtr(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// Legacy Aliases
+
+// GetBooleanPropOrDefault is an alias for GetBooleanOrDefault.
+func GetBooleanPropOrDefault(props map[string]interface{}, prop string, defaultValue bool) bool {
+	return GetBooleanOrDefault(props, prop, defaultValue)
 }
 
 // GetBooleanPropOrDefaultFunction retrieves a boolean property or returns a value from a default function.
 func GetBooleanPropOrDefaultFunction(props map[string]interface{}, prop string, defaultFunction func() bool) bool {
-	if props == nil {
+	val, err := GetBoolean(props, prop)
+	if err != nil {
 		return defaultFunction()
 	}
-	val, ok := props[prop]
-	if !ok {
-		return defaultFunction()
-	}
-	if boolVal, ok := val.(bool); ok {
-		return boolVal
-	}
-	return defaultFunction()
+	return val
 }
 
 // GetBooleanPropOrThrow retrieves a boolean property or panics if missing/invalid.
 func GetBooleanPropOrThrow(props map[string]interface{}, prop string, message ...string) bool {
-	msg := "Property " + prop + " is missing or not a boolean"
-	if len(message) > 0 {
-		msg = message[0]
-	}
-	if props == nil {
+	val, err := GetBoolean(props, prop)
+	if err != nil {
+		msg := err.Error()
+		if len(message) > 0 {
+			msg = message[0]
+		}
 		panic(msg)
 	}
-	val, ok := props[prop]
-	if !ok {
-		panic(msg)
-	}
-	if boolVal, ok := val.(bool); ok {
-		return boolVal
-	}
-	panic(msg)
+	return val
 }
 
 // GetBooleanFunctionPropOrDefault constructs a boolean using a function or returns default.
-// In TS: constructorFunc: (v: unknown) => boolean
 func GetBooleanFunctionPropOrDefault(props map[string]interface{}, prop string, constructorFunc func(interface{}) bool, defaultValue bool) bool {
 	if props == nil {
 		return defaultValue
@@ -59,11 +98,6 @@ func GetBooleanFunctionPropOrDefault(props map[string]interface{}, prop string, 
 	if !ok {
 		return defaultValue
 	}
-	// The constructorFunc is responsible for validating/converting the value.
-	// But in TS version, it seems if constructorFunc is provided, it is used on the value.
-	// If the value is there, we pass it to constructorFunc.
-	// Wait, does constructorFunc handle invalid types? The signature says (v: unknown) => boolean.
-	// So we should just call it.
 	return constructorFunc(val)
 }
 
