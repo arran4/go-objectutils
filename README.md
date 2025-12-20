@@ -254,3 +254,8 @@ The library includes several legacy functions for backward compatibility. These 
 *   `GetObjectPropOrDefault` -> `GetObjectOrDefault`
 *   `GetStringPropOrThrow`, `GetNumberPropOrThrow`, etc. -> Custom error message wrappers around `Get*`.
 *   `Get*PropOrDefaultFunction` -> Uses a function to generate the default value (lazy evaluation).
+## Related Libraries
+
+*   [Dart Object Utils](https://github.com/arran4/dartobjectutils)
+*   [Go Object Utils](https://github.com/arran4/go-objectutils)
+*   [TS Object Utils](https://github.com/arran4/tsobjectutils)
