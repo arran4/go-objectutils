@@ -332,8 +332,8 @@ func TestArrayMore(t *testing.T) {
 			time.Now().UnixMilli(),
 		},
 		"badDates": []interface{}{"not a date"},
-		"strs": []string{"a", "b"},
-		"objs": []interface{}{map[string]interface{}{"a": 1}},
+		"strs":     []string{"a", "b"},
+		"objs":     []interface{}{map[string]interface{}{"a": 1}},
 	}
 
 	// Date Array
@@ -364,10 +364,10 @@ func TestArrayMore(t *testing.T) {
 
 func TestFunctionProps(t *testing.T) {
 	props := map[string]interface{}{
-		"str": "val",
+		"str":  "val",
 		"bool": true,
 		"date": time.Now().Format(time.RFC3339),
-		"obj": map[string]interface{}{"a": 1},
+		"obj":  map[string]interface{}{"a": 1},
 		"objArr": []interface{}{
 			map[string]interface{}{"a": 1},
 		},
@@ -402,14 +402,12 @@ func TestFunctionProps(t *testing.T) {
 	// Missing
 	assert.Equal(t, 0, GetObjectFunctionPropOrDefault(props, "missing", func(m map[string]interface{}) int { return 10 }, 0))
 
-
 	res = GetObjectFunctionPropOrThrow(props, "obj", func(m map[string]interface{}) int {
 		return 20
 	})
 	assert.Equal(t, 20, res)
 	assert.Panics(t, func() { GetObjectFunctionPropOrThrow[int](props, "missing", nil) })
 	assert.Panics(t, func() { GetObjectFunctionPropOrThrow[int](props, "missing", nil, "msg") })
-
 
 	// Object Array Constructor
 	arrRes := GetObjectArrayFunctionPropOrDefault(props, "objArr", func(m map[string]interface{}) int {
@@ -422,7 +420,7 @@ func TestFunctionProps(t *testing.T) {
 func TestNullAllow(t *testing.T) {
 	props := map[string]interface{}{
 		"null": nil,
-		"str": "s",
+		"str":  "s",
 	}
 
 	val := GetObjectPropOrDefaultAllowNull(props, "null", "default")
@@ -447,11 +445,11 @@ func TestLegacyMissing(t *testing.T) {
 
 func TestAllLegacyOrThrow(t *testing.T) {
 	props := map[string]interface{}{
-		"str": "s",
-		"num": 1,
+		"str":  "s",
+		"num":  1,
 		"bool": true,
 		"date": time.Now(),
-		"obj": map[string]interface{}{},
+		"obj":  map[string]interface{}{},
 	}
 
 	assert.Equal(t, "s", GetStringPropOrThrow(props, "str"))
@@ -488,25 +486,25 @@ func TestNewArrayFeatures(t *testing.T) {
 
 	props := map[string]interface{}{
 		// Array of Pointers
-		"strPtrArr": []*string{&s1, &s2},
-		"intPtrArr": []*int{&i1, &i2},
+		"strPtrArr":  []*string{&s1, &s2},
+		"intPtrArr":  []*int{&i1, &i2},
 		"boolPtrArr": []*bool{&b1, &b2},
 		"datePtrArr": []*time.Time{&d1, &d2},
-		"objPtrArr": []*map[string]interface{}{&o1, &o2},
+		"objPtrArr":  []*map[string]interface{}{&o1, &o2},
 
 		// Mixed Array with Pointers (simulating interface array)
-		"strPtrMix": []interface{}{&s1, &s2},
-		"intPtrMix": []interface{}{&i1, &i2}, // Will fail if not converted properly, but GetNumberPointerArray handles conversion
+		"strPtrMix":  []interface{}{&s1, &s2},
+		"intPtrMix":  []interface{}{&i1, &i2}, // Will fail if not converted properly, but GetNumberPointerArray handles conversion
 		"boolPtrMix": []interface{}{&b1, &b2},
 		"datePtrMix": []interface{}{&d1, &d2},
-		"objPtrMix": []interface{}{&o1, &o2},
+		"objPtrMix":  []interface{}{&o1, &o2},
 
 		// Plain arrays to test conversion to pointer arrays
-		"strArr": []string{"a", "b"},
-		"intArr": []int{1, 2},
+		"strArr":  []string{"a", "b"},
+		"intArr":  []int{1, 2},
 		"boolArr": []bool{true, false},
 		"dateArr": []time.Time{now, now.Add(time.Hour)},
-		"objArr": []interface{}{o1, o2},
+		"objArr":  []interface{}{o1, o2},
 	}
 
 	// 1. Number Array Support
