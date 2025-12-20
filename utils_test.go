@@ -476,3 +476,157 @@ func TestAllLegacyOrDefault(t *testing.T) {
 	assert.Equal(t, time.Time{}, GetDatePropOrDefault(props, "m", time.Time{}))
 	assert.Equal(t, 1, GetObjectPropOrDefault(props, "m", 1))
 }
+
+func TestNewArrayFeatures(t *testing.T) {
+	// Setup test data
+	now := time.Now()
+	s1, s2 := "a", "b"
+	i1, i2 := 1, 2
+	b1, b2 := true, false
+	d1, d2 := now, now.Add(time.Hour)
+	o1, o2 := map[string]interface{}{"k": 1}, map[string]interface{}{"k": 2}
+
+	props := map[string]interface{}{
+		// Array of Pointers
+		"strPtrArr": []*string{&s1, &s2},
+		"intPtrArr": []*int{&i1, &i2},
+		"boolPtrArr": []*bool{&b1, &b2},
+		"datePtrArr": []*time.Time{&d1, &d2},
+		"objPtrArr": []*map[string]interface{}{&o1, &o2},
+
+		// Mixed Array with Pointers (simulating interface array)
+		"strPtrMix": []interface{}{&s1, &s2},
+		"intPtrMix": []interface{}{&i1, &i2}, // Will fail if not converted properly, but GetNumberPointerArray handles conversion
+		"boolPtrMix": []interface{}{&b1, &b2},
+		"datePtrMix": []interface{}{&d1, &d2},
+		"objPtrMix": []interface{}{&o1, &o2},
+
+		// Plain arrays to test conversion to pointer arrays
+		"strArr": []string{"a", "b"},
+		"intArr": []int{1, 2},
+		"boolArr": []bool{true, false},
+		"dateArr": []time.Time{now, now.Add(time.Hour)},
+		"objArr": []interface{}{o1, o2},
+	}
+
+	// 1. Number Array Support
+	// GetNumberArray
+	nums, err := GetNumberArray[int](props, "intArr")
+	assert.NoError(t, err)
+	assert.Equal(t, []int{1, 2}, nums)
+
+	// MustGetNumberArray
+	assert.Equal(t, []int{1, 2}, MustGetNumberArray[int](props, "intArr"))
+
+	// GetNumberArrayOrDefault
+	assert.Equal(t, []int{1, 2}, GetNumberArrayOrDefault[int](props, "intArr", nil))
+	assert.Equal(t, []int{10}, GetNumberArrayOrDefault[int](props, "missing", []int{10}))
+
+	// 2. Boolean Array Support
+	// GetBooleanArray
+	bools, err := GetBooleanArray(props, "boolArr")
+	assert.NoError(t, err)
+	assert.Equal(t, []bool{true, false}, bools)
+
+	// MustGetBooleanArray
+	assert.Equal(t, []bool{true, false}, MustGetBooleanArray(props, "boolArr"))
+
+	// GetBooleanArrayOrDefault
+	assert.Equal(t, []bool{true, false}, GetBooleanArrayOrDefault(props, "boolArr", nil))
+
+	// 3. Pointer to Slice (*[]T) Support
+
+	// String
+	strArrPtr, err := GetStringArrayPtr(props, "strArr")
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"a", "b"}, *strArrPtr)
+	assert.NotNil(t, MustGetStringArrayPtr(props, "strArr"))
+	assert.Nil(t, GetStringArrayPtrOrDefault(props, "missing", nil))
+
+	// Number
+	numArrPtr, err := GetNumberArrayPtr[int](props, "intArr")
+	assert.NoError(t, err)
+	assert.Equal(t, []int{1, 2}, *numArrPtr)
+	assert.NotNil(t, MustGetNumberArrayPtr[int](props, "intArr"))
+	assert.Nil(t, GetNumberArrayPtrOrDefault[int](props, "missing", nil))
+
+	// Boolean
+	boolArrPtr, err := GetBooleanArrayPtr(props, "boolArr")
+	assert.NoError(t, err)
+	assert.Equal(t, []bool{true, false}, *boolArrPtr)
+	assert.NotNil(t, MustGetBooleanArrayPtr(props, "boolArr"))
+	assert.Nil(t, GetBooleanArrayPtrOrDefault(props, "missing", nil))
+
+	// Date
+	dateArrPtr, err := GetDateArrayPtr(props, "dateArr")
+	assert.NoError(t, err)
+	assert.Len(t, *dateArrPtr, 2)
+	assert.NotNil(t, MustGetDateArrayPtr(props, "dateArr"))
+	assert.Nil(t, GetDateArrayPtrOrDefault(props, "missing", nil))
+
+	// Object
+	objArrPtr, err := GetObjectArrayPtr[map[string]interface{}](props, "objArr")
+	assert.NoError(t, err)
+	assert.Len(t, *objArrPtr, 2)
+	assert.NotNil(t, MustGetObjectArrayPtr[map[string]interface{}](props, "objArr"))
+	assert.Nil(t, GetObjectArrayPtrOrDefault[map[string]interface{}](props, "missing", nil))
+
+	// 4. Slice of Pointers ([]*T) Support
+
+	// String
+	strPtrs, err := GetStringPointerArray(props, "strArr")
+	assert.NoError(t, err)
+	assert.Equal(t, "a", *strPtrs[0])
+
+	// Number
+	numPtrs, err := GetNumberPointerArray[int](props, "intArr")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, *numPtrs[0])
+
+	// Boolean
+	boolPtrs, err := GetBooleanPointerArray(props, "boolArr")
+	assert.NoError(t, err)
+	assert.Equal(t, true, *boolPtrs[0])
+
+	// Date
+	datePtrs, err := GetDatePointerArray(props, "dateArr")
+	assert.NoError(t, err)
+	assert.True(t, datePtrs[0].Equal(now))
+
+	// Object
+	objPtrs, err := GetObjectPointerArray[map[string]interface{}](props, "objArr")
+	assert.NoError(t, err)
+	assert.Equal(t, o1, *objPtrs[0])
+
+	// Test with explicit pointer arrays
+	strPtrs2, err := GetStringPointerArray(props, "strPtrArr")
+	assert.NoError(t, err)
+	assert.Equal(t, "a", *strPtrs2[0])
+
+	// 5. Pointer to Slice of Pointers (*[]*T) Support
+
+	// String
+	strPtrArrPtr, err := GetStringPointerArrayPtr(props, "strArr")
+	assert.NoError(t, err)
+	assert.Equal(t, "a", *(*strPtrArrPtr)[0])
+
+	// Number
+	numPtrArrPtr, err := GetNumberPointerArrayPtr[int](props, "intArr")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, *(*numPtrArrPtr)[0])
+
+	// Boolean
+	boolPtrArrPtr, err := GetBooleanPointerArrayPtr(props, "boolArr")
+	assert.NoError(t, err)
+	assert.Equal(t, true, *(*boolPtrArrPtr)[0])
+
+	// Date
+	datePtrArrPtr, err := GetDatePointerArrayPtr(props, "dateArr")
+	assert.NoError(t, err)
+	assert.True(t, (*datePtrArrPtr)[0].Equal(now))
+
+	// Object
+	objPtrArrPtr, err := GetObjectPointerArrayPtr[map[string]interface{}](props, "objArr")
+	assert.NoError(t, err)
+	assert.Equal(t, o1, *(*objPtrArrPtr)[0])
+}
