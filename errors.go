@@ -29,3 +29,14 @@ func (e *InvalidTypeError) Error() string {
 func (e *InvalidTypeError) Unwrap() error {
 	return e.Cause
 }
+
+// RegexMismatchError indicates that a string field does not match the expected regular expression.
+type RegexMismatchError struct {
+	Prop       string
+	Value      string
+	Expression string
+}
+
+func (e *RegexMismatchError) Error() string {
+	return fmt.Sprintf("property '%s' value '%s' does not match regex '%s'", e.Prop, e.Value, e.Expression)
+}

@@ -46,6 +46,56 @@ func TestString(t *testing.T) {
 	assert.Nil(t, ptrVal)
 }
 
+func TestStringRegex(t *testing.T) {
+	props := map[string]interface{}{
+		"email":   "test@example.com",
+		"invalid": "not-an-email",
+		"badType": 123,
+	}
+	emailRegex := `^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$`
+
+	// GetStringRegex
+	val, err := GetStringRegex(props, "email", emailRegex)
+	assert.NoError(t, err)
+	assert.Equal(t, "test@example.com", val)
+
+	_, err = GetStringRegex(props, "invalid", emailRegex)
+	assert.Error(t, err)
+	assert.IsType(t, &RegexMismatchError{}, err)
+
+	_, err = GetStringRegex(props, "badType", emailRegex)
+	assert.Error(t, err)
+	assert.IsType(t, &InvalidTypeError{}, err)
+
+	_, err = GetStringRegex(props, "missing", emailRegex)
+	assert.Error(t, err)
+	assert.IsType(t, &MissingFieldError{}, err)
+
+	// Invalid regex
+	_, err = GetStringRegex(props, "email", "[")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid regex")
+
+	// MustGetStringRegex
+	assert.Equal(t, "test@example.com", MustGetStringRegex(props, "email", emailRegex))
+	assert.Panics(t, func() { MustGetStringRegex(props, "invalid", emailRegex) })
+
+	// GetStringRegexOrDefault
+	assert.Equal(t, "test@example.com", GetStringRegexOrDefault(props, "email", emailRegex, "def"))
+	assert.Equal(t, "def", GetStringRegexOrDefault(props, "invalid", emailRegex, "def"))
+
+	// Pointer variations
+	ptrVal, err := GetStringRegexPtr(props, "email", emailRegex)
+	assert.NoError(t, err)
+	assert.Equal(t, "test@example.com", *ptrVal)
+
+	ptrVal = GetStringRegexPtrOrDefault(props, "invalid", emailRegex, nil)
+	assert.Nil(t, ptrVal)
+
+	assert.Equal(t, "test@example.com", *MustGetStringRegexPtr(props, "email", emailRegex))
+	assert.Panics(t, func() { MustGetStringRegexPtr(props, "invalid", emailRegex) })
+}
+
 func TestNumber(t *testing.T) {
 	props := map[string]interface{}{
 		"int":     10,
