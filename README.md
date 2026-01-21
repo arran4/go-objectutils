@@ -74,6 +74,12 @@ if valPtr == nil {
 | `GetStringPtr` | Returns `*string` or error. |
 | `MustGetStringPtr` | Returns `*string` or panics. |
 | `GetStringPtrOrDefault` | Returns `*string` or default value. |
+| `GetStringRegex` | Returns `string` validated by regex or error. |
+| `MustGetStringRegex` | Returns `string` validated by regex or panics. |
+| `GetStringRegexOrDefault` | Returns `string` validated by regex or default value. |
+| `GetStringRegexPtr` | Returns `*string` validated by regex or error. |
+| `MustGetStringRegexPtr` | Returns `*string` validated by regex or panics. |
+| `GetStringRegexPtrOrDefault` | Returns `*string` validated by regex or default value. |
 
 ### Numbers (Generics)
 
