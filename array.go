@@ -144,13 +144,6 @@ func GetObjectArray[T any](props map[string]interface{}, prop string) ([]T, erro
 				res[i] = castVal
 				continue
 			}
-			// Special handling if T is map[string]interface{} (or alias)
-			if m, ok := v.(map[string]interface{}); ok {
-				if castVal, ok := interface{}(m).(T); ok {
-					res[i] = castVal
-					continue
-				}
-			}
 			var zero T
 			return nil, &InvalidTypeError{Prop: prop, Expected: fmt.Sprintf("%T element", zero), Actual: v}
 		}
@@ -230,13 +223,6 @@ func GetObjectPointerArray[T any](props map[string]interface{}, prop string) ([]
 			if castVal, ok := v.(*T); ok {
 				res[i] = castVal
 				continue
-			}
-			// Special handling for map[string]interface{}
-			if m, ok := v.(map[string]interface{}); ok {
-				if castVal, ok := interface{}(m).(T); ok {
-					res[i] = &castVal
-					continue
-				}
 			}
 			var zero T
 			return nil, &InvalidTypeError{Prop: prop, Expected: fmt.Sprintf("*%T element", zero), Actual: v}
