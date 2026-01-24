@@ -15,9 +15,9 @@ func GetBigInt(props map[string]interface{}, prop string) (*big.Int, error) {
 		return nil, &MissingFieldError{Prop: prop}
 	}
 
-	bi := new(big.Int)
 	switch v := val.(type) {
 	case string:
+		bi := new(big.Int)
 		if _, ok := bi.SetString(v, 10); ok {
 			return bi, nil
 		}
