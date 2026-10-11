@@ -265,3 +265,8 @@ The library includes several legacy functions for backward compatibility. These 
 *   [Dart Object Utils](https://github.com/arran4/dartobjectutils)
 *   [Go Object Utils](https://github.com/arran4/go-objectutils)
 *   [TS Object Utils](https://github.com/arran4/tsobjectutils)
+
+## Contributing and engineering guidance
+
+Before changing public behaviour, tests, parsers or generation rules, see [repository-specific agent/contributor guidance](AGENTS.md). The applicable rationale is collected in [Suggested Coding Standards](https://arran4.github.io/blog/post/2026/055-suggested-coding-standards-for-repositories-and-agents/); this is selective guidance, not a blanket rewrite policy. The [standards adoption issue](https://github.com/arran4/go-objectutils/issues/24) tracks the required implementation/test audit separately from documentation.
+
