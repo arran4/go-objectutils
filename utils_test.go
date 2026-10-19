@@ -1,6 +1,8 @@
 package go_objectutils
 
 import (
+	"strings"
+
 	"math/big"
 	"testing"
 	"time"
@@ -682,47 +684,93 @@ func TestNewArrayFeatures(t *testing.T) {
 func TestMissingPointerArrayFuncs(t *testing.T) {
 	now := time.Now()
 	s1 := "a"
+	sDef := "default"
 	i1 := 1
+	iDef := 99
 	b1 := true
+	bDef := false
 	o1 := map[string]interface{}{"k": "v"}
+	oDef := map[string]interface{}{"def": "val"}
+	mDef := map[string]interface{}{"mdef": "mval"}
+
 	props := map[string]interface{}{
-		"sa": []*string{&s1},
-		"na": []*int{&i1},
-		"ba": []*bool{&b1},
-		"da": []*time.Time{&now},
-		"oa": []*map[string]interface{}{&o1},
-		"m":  map[string]interface{}{"k": "v"},
+		"sa":  []*string{&s1},
+		"na":  []*int{&i1},
+		"ba":  []*bool{&b1},
+		"da":  []*time.Time{&now},
+		"oa":  []*map[string]interface{}{&o1},
+		"m":   map[string]interface{}{"k": "v"},
+		"bad": "not_an_array",
 	}
 
-	assert.Equal(t, []*string{&s1}, MustGetStringPointerArray(props, "sa"))
-	assert.Equal(t, []*string{&s1}, GetStringPointerArrayOrDefault(props, "sa", nil))
-	assert.Equal(t, &[]*string{&s1}, MustGetStringPointerArrayPtr(props, "sa"))
-	assert.Equal(t, &[]*string{&s1}, GetStringPointerArrayPtrOrDefault(props, "sa", nil))
+	// 1. String Pointer Arrays
+	assert.Equal(t, []*string{&s1}, GetStringPointerArrayOrDefault(props, "sa", []*string{&sDef}))
+	assert.Equal(t, []*string{&sDef}, GetStringPointerArrayOrDefault(props, "missing", []*string{&sDef}))
+	assert.Equal(t, []*string{&sDef}, GetStringPointerArrayOrDefault(props, "bad", []*string{&sDef}))
+	assert.Equal(t, &[]*string{&s1}, GetStringPointerArrayPtrOrDefault(props, "sa", &[]*string{&sDef}))
+	assert.Equal(t, &[]*string{&sDef}, GetStringPointerArrayPtrOrDefault(props, "missing", &[]*string{&sDef}))
+	assert.Equal(t, &[]*string{&sDef}, GetStringPointerArrayPtrOrDefault(props, "bad", &[]*string{&sDef}))
 
-	assert.Equal(t, []*int{&i1}, MustGetNumberPointerArray[int](props, "na"))
-	assert.Equal(t, []*int{&i1}, GetNumberPointerArrayOrDefault[int](props, "na", nil))
-	assert.Equal(t, &[]*int{&i1}, MustGetNumberPointerArrayPtr[int](props, "na"))
-	assert.Equal(t, &[]*int{&i1}, GetNumberPointerArrayPtrOrDefault[int](props, "na", nil))
+	// 2. Number Pointer Arrays
+	assert.Equal(t, []*int{&i1}, GetNumberPointerArrayOrDefault[int](props, "na", []*int{&iDef}))
+	assert.Equal(t, []*int{&iDef}, GetNumberPointerArrayOrDefault[int](props, "missing", []*int{&iDef}))
+	assert.Equal(t, []*int{&iDef}, GetNumberPointerArrayOrDefault[int](props, "bad", []*int{&iDef}))
+	assert.Equal(t, &[]*int{&i1}, GetNumberPointerArrayPtrOrDefault[int](props, "na", &[]*int{&iDef}))
+	assert.Equal(t, &[]*int{&iDef}, GetNumberPointerArrayPtrOrDefault[int](props, "missing", &[]*int{&iDef}))
+	assert.Equal(t, &[]*int{&iDef}, GetNumberPointerArrayPtrOrDefault[int](props, "bad", &[]*int{&iDef}))
 
-	assert.Equal(t, []*bool{&b1}, MustGetBooleanPointerArray(props, "ba"))
-	assert.Equal(t, []*bool{&b1}, GetBooleanPointerArrayOrDefault(props, "ba", nil))
-	assert.Equal(t, &[]*bool{&b1}, MustGetBooleanPointerArrayPtr(props, "ba"))
-	assert.Equal(t, &[]*bool{&b1}, GetBooleanPointerArrayPtrOrDefault(props, "ba", nil))
+	// 3. Boolean Pointer Arrays
+	assert.Equal(t, []*bool{&b1}, GetBooleanPointerArrayOrDefault(props, "ba", []*bool{&bDef}))
+	assert.Equal(t, []*bool{&bDef}, GetBooleanPointerArrayOrDefault(props, "missing", []*bool{&bDef}))
+	assert.Equal(t, []*bool{&bDef}, GetBooleanPointerArrayOrDefault(props, "bad", []*bool{&bDef}))
+	assert.Equal(t, &[]*bool{&b1}, GetBooleanPointerArrayPtrOrDefault(props, "ba", &[]*bool{&bDef}))
+	assert.Equal(t, &[]*bool{&bDef}, GetBooleanPointerArrayPtrOrDefault(props, "missing", &[]*bool{&bDef}))
+	assert.Equal(t, &[]*bool{&bDef}, GetBooleanPointerArrayPtrOrDefault(props, "bad", &[]*bool{&bDef}))
 
-	assert.Equal(t, []*time.Time{&now}, MustGetDatePointerArray(props, "da"))
-	assert.Equal(t, []*time.Time{&now}, GetDatePointerArrayOrDefault(props, "da", nil))
-	assert.Equal(t, &[]*time.Time{&now}, MustGetDatePointerArrayPtr(props, "da"))
-	assert.Equal(t, &[]*time.Time{&now}, GetDatePointerArrayPtrOrDefault(props, "da", nil))
+	// 4. Date Pointer Arrays
+	dDef := time.Now().Add(time.Hour)
+	assert.Equal(t, []*time.Time{&now}, GetDatePointerArrayOrDefault(props, "da", []*time.Time{&dDef}))
+	assert.Equal(t, []*time.Time{&dDef}, GetDatePointerArrayOrDefault(props, "missing", []*time.Time{&dDef}))
+	assert.Equal(t, []*time.Time{&dDef}, GetDatePointerArrayOrDefault(props, "bad", []*time.Time{&dDef}))
+	assert.Equal(t, &[]*time.Time{&now}, GetDatePointerArrayPtrOrDefault(props, "da", &[]*time.Time{&dDef}))
+	assert.Equal(t, &[]*time.Time{&dDef}, GetDatePointerArrayPtrOrDefault(props, "missing", &[]*time.Time{&dDef}))
+	assert.Equal(t, &[]*time.Time{&dDef}, GetDatePointerArrayPtrOrDefault(props, "bad", &[]*time.Time{&dDef}))
 
-	assert.Equal(t, []*map[string]interface{}{&o1}, MustGetObjectPointerArray[map[string]interface{}](props, "oa"))
-	assert.Equal(t, []*map[string]interface{}{&o1}, GetObjectPointerArrayOrDefault[map[string]interface{}](props, "oa", nil))
-	assert.Equal(t, &[]*map[string]interface{}{&o1}, MustGetObjectPointerArrayPtr[map[string]interface{}](props, "oa"))
-	assert.Equal(t, &[]*map[string]interface{}{&o1}, GetObjectPointerArrayPtrOrDefault[map[string]interface{}](props, "oa", nil))
+	// 5. Object Pointer Arrays
+	assert.Equal(t, []*map[string]interface{}{&o1}, GetObjectPointerArrayOrDefault[map[string]interface{}](props, "oa", []*map[string]interface{}{&oDef}))
+	assert.Equal(t, []*map[string]interface{}{&oDef}, GetObjectPointerArrayOrDefault[map[string]interface{}](props, "missing", []*map[string]interface{}{&oDef}))
+	assert.Equal(t, []*map[string]interface{}{&oDef}, GetObjectPointerArrayOrDefault[map[string]interface{}](props, "bad", []*map[string]interface{}{&oDef}))
+	assert.Equal(t, &[]*map[string]interface{}{&o1}, GetObjectPointerArrayPtrOrDefault[map[string]interface{}](props, "oa", &[]*map[string]interface{}{&oDef}))
+	assert.Equal(t, &[]*map[string]interface{}{&oDef}, GetObjectPointerArrayPtrOrDefault[map[string]interface{}](props, "missing", &[]*map[string]interface{}{&oDef}))
+	assert.Equal(t, &[]*map[string]interface{}{&oDef}, GetObjectPointerArrayPtrOrDefault[map[string]interface{}](props, "bad", &[]*map[string]interface{}{&oDef}))
 
-	assert.Equal(t, map[string]interface{}{"k": "v"}, GetMapOrDefault[string, interface{}](props, "m", nil))
-	mPtr := MustGetMapPtr[string, interface{}](props, "m")
+	// 6. Map variants
+	assert.Equal(t, map[string]interface{}{"k": "v"}, GetMapOrDefault[string, interface{}](props, "m", mDef))
+	assert.Equal(t, mDef, GetMapOrDefault[string, interface{}](props, "missing", mDef))
+	assert.Equal(t, mDef, GetMapOrDefault[string, interface{}](props, "bad", mDef))
+
+	assert.Equal(t, &map[string]interface{}{"k": "v"}, GetMapPtrOrDefault[string, interface{}](props, "m", &mDef))
+	assert.Equal(t, &mDef, GetMapPtrOrDefault[string, interface{}](props, "missing", &mDef))
+	assert.Equal(t, &mDef, GetMapPtrOrDefault[string, interface{}](props, "bad", &mDef))
+
+	mPtr, err := GetMapPtr[string, interface{}](props, "m")
+	assert.NoError(t, err)
 	assert.Equal(t, &map[string]interface{}{"k": "v"}, mPtr)
-	assert.Equal(t, &map[string]interface{}{"k": "v"}, GetMapPtrOrDefault[string, interface{}](props, "m", nil))
+
+	mPtrBad, err := GetMapPtr[string, interface{}](props, "bad")
+	assert.Error(t, err)
+	assert.Nil(t, mPtrBad)
+	assert.IsType(t, &InvalidTypeError{}, err)
+}
+
+func assertPanicWithError(t *testing.T, expectedErrType interface{}, f func()) {
+	t.Helper()
+	defer func() {
+		r := recover()
+		assert.NotNil(t, r, "Expected panic, but it did not occur")
+		assert.IsType(t, expectedErrType, r, "Panic value is not of the expected error type")
+	}()
+	f()
 }
 
 func TestMissingPointerArrayFuncs_Panics(t *testing.T) {
@@ -730,10 +778,41 @@ func TestMissingPointerArrayFuncs_Panics(t *testing.T) {
 		"bad": "not_an_array",
 	}
 
-	assert.Panics(t, func() { MustGetStringPointerArray(props, "bad") })
-	assert.Panics(t, func() { MustGetNumberPointerArray[int](props, "bad") })
-	assert.Panics(t, func() { MustGetBooleanPointerArray(props, "bad") })
-	assert.Panics(t, func() { MustGetDatePointerArray(props, "bad") })
-	assert.Panics(t, func() { MustGetObjectPointerArray[map[string]interface{}](props, "bad") })
-	assert.Panics(t, func() { MustGetMapPtr[string, interface{}](props, "bad") })
+	funcs := []struct {
+		name string
+		fn   func()
+	}{
+		{"MustGetStringPointerArray", func() { MustGetStringPointerArray(props, "bad") }},
+		{"MustGetStringPointerArrayPtr", func() { MustGetStringPointerArrayPtr(props, "bad") }},
+		{"MustGetNumberPointerArray", func() { MustGetNumberPointerArray[int](props, "bad") }},
+		{"MustGetNumberPointerArrayPtr", func() { MustGetNumberPointerArrayPtr[int](props, "bad") }},
+		{"MustGetBooleanPointerArray", func() { MustGetBooleanPointerArray(props, "bad") }},
+		{"MustGetBooleanPointerArrayPtr", func() { MustGetBooleanPointerArrayPtr(props, "bad") }},
+		{"MustGetDatePointerArray", func() { MustGetDatePointerArray(props, "bad") }},
+		{"MustGetDatePointerArrayPtr", func() { MustGetDatePointerArrayPtr(props, "bad") }},
+		{"MustGetObjectPointerArray", func() { MustGetObjectPointerArray[map[string]interface{}](props, "bad") }},
+		{"MustGetObjectPointerArrayPtr", func() { MustGetObjectPointerArrayPtr[map[string]interface{}](props, "bad") }},
+		{"MustGetMapPtr", func() { MustGetMapPtr[string, interface{}](props, "bad") }},
+		{"MustGetStringPointerArray_missing", func() { MustGetStringPointerArray(props, "missing") }},
+		{"MustGetStringPointerArrayPtr_missing", func() { MustGetStringPointerArrayPtr(props, "missing") }},
+		{"MustGetNumberPointerArray_missing", func() { MustGetNumberPointerArray[int](props, "missing") }},
+		{"MustGetNumberPointerArrayPtr_missing", func() { MustGetNumberPointerArrayPtr[int](props, "missing") }},
+		{"MustGetBooleanPointerArray_missing", func() { MustGetBooleanPointerArray(props, "missing") }},
+		{"MustGetBooleanPointerArrayPtr_missing", func() { MustGetBooleanPointerArrayPtr(props, "missing") }},
+		{"MustGetDatePointerArray_missing", func() { MustGetDatePointerArray(props, "missing") }},
+		{"MustGetDatePointerArrayPtr_missing", func() { MustGetDatePointerArrayPtr(props, "missing") }},
+		{"MustGetObjectPointerArray_missing", func() { MustGetObjectPointerArray[map[string]interface{}](props, "missing") }},
+		{"MustGetObjectPointerArrayPtr_missing", func() { MustGetObjectPointerArrayPtr[map[string]interface{}](props, "missing") }},
+		{"MustGetMapPtr_missing", func() { MustGetMapPtr[string, interface{}](props, "missing") }},
+	}
+
+	for _, tt := range funcs {
+		t.Run(tt.name, func(t *testing.T) {
+			if strings.HasSuffix(tt.name, "_missing") {
+				assertPanicWithError(t, &MissingFieldError{}, tt.fn)
+			} else {
+				assertPanicWithError(t, &InvalidTypeError{}, tt.fn)
+			}
+		})
+	}
 }
