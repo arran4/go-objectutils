@@ -674,3 +674,183 @@ func GetObjectArrayFunctionPropOrDefault[T any](props map[string]interface{}, pr
 func GetDateArrayPropOrDefault(props map[string]interface{}, prop string, defaultValue []time.Time) []time.Time {
 	return GetDateArrayOrDefault(props, prop, defaultValue)
 }
+
+// MustGetStringPointerArray retrieves a property as a slice of string pointers or panics.
+func MustGetStringPointerArray(props map[string]interface{}, prop string) []*string {
+	val, err := GetStringPointerArray(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetStringPointerArrayOrDefault retrieves a property as a slice of string pointers or returns a default value.
+func GetStringPointerArrayOrDefault(props map[string]interface{}, prop string, defaultValue []*string) []*string {
+	val, err := GetStringPointerArray(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetStringPointerArrayPtr retrieves a property as a pointer to a slice of string pointers or panics.
+func MustGetStringPointerArrayPtr(props map[string]interface{}, prop string) *[]*string {
+	val, err := GetStringPointerArrayPtr(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetStringPointerArrayPtrOrDefault retrieves a property as a pointer to a slice of string pointers or returns a default value.
+func GetStringPointerArrayPtrOrDefault(props map[string]interface{}, prop string, defaultValue *[]*string) *[]*string {
+	val, err := GetStringPointerArrayPtr(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetObjectPointerArray retrieves a property as a slice of T pointers or panics.
+func MustGetObjectPointerArray[T any](props map[string]interface{}, prop string) []*T {
+	val, err := GetObjectPointerArray[T](props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetObjectPointerArrayOrDefault retrieves a property as a slice of T pointers or returns a default value.
+func GetObjectPointerArrayOrDefault[T any](props map[string]interface{}, prop string, defaultValue []*T) []*T {
+	val, err := GetObjectPointerArray[T](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetObjectPointerArrayPtr retrieves a property as a pointer to a slice of T pointers or panics.
+func MustGetObjectPointerArrayPtr[T any](props map[string]interface{}, prop string) *[]*T {
+	val, err := GetObjectPointerArrayPtr[T](props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetObjectPointerArrayPtrOrDefault retrieves a property as a pointer to a slice of T pointers or returns a default value.
+func GetObjectPointerArrayPtrOrDefault[T any](props map[string]interface{}, prop string, defaultValue *[]*T) *[]*T {
+	val, err := GetObjectPointerArrayPtr[T](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetDatePointerArray retrieves a property as a slice of time.Time pointers or panics.
+func MustGetDatePointerArray(props map[string]interface{}, prop string) []*time.Time {
+	val, err := GetDatePointerArray(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetDatePointerArrayOrDefault retrieves a property as a slice of time.Time pointers or returns a default value.
+func GetDatePointerArrayOrDefault(props map[string]interface{}, prop string, defaultValue []*time.Time) []*time.Time {
+	val, err := GetDatePointerArray(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetDatePointerArrayPtr retrieves a property as a pointer to a slice of time.Time pointers or panics.
+func MustGetDatePointerArrayPtr(props map[string]interface{}, prop string) *[]*time.Time {
+	val, err := GetDatePointerArrayPtr(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetDatePointerArrayPtrOrDefault retrieves a property as a pointer to a slice of time.Time pointers or returns a default value.
+func GetDatePointerArrayPtrOrDefault(props map[string]interface{}, prop string, defaultValue *[]*time.Time) *[]*time.Time {
+	val, err := GetDatePointerArrayPtr(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetNumberPointerArray retrieves a property as a slice of T pointers or panics.
+func MustGetNumberPointerArray[T NumberConstraint](props map[string]interface{}, prop string) []*T {
+	val, err := GetNumberPointerArray[T](props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetNumberPointerArrayOrDefault retrieves a property as a slice of T pointers or returns a default value.
+func GetNumberPointerArrayOrDefault[T NumberConstraint](props map[string]interface{}, prop string, defaultValue []*T) []*T {
+	val, err := GetNumberPointerArray[T](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetNumberPointerArrayPtr retrieves a property as a pointer to a slice of T pointers or panics.
+func MustGetNumberPointerArrayPtr[T NumberConstraint](props map[string]interface{}, prop string) *[]*T {
+	val, err := GetNumberPointerArrayPtr[T](props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetNumberPointerArrayPtrOrDefault retrieves a property as a pointer to a slice of T pointers or returns a default value.
+func GetNumberPointerArrayPtrOrDefault[T NumberConstraint](props map[string]interface{}, prop string, defaultValue *[]*T) *[]*T {
+	val, err := GetNumberPointerArrayPtr[T](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetBooleanPointerArray retrieves a property as a slice of bool pointers or panics.
+func MustGetBooleanPointerArray(props map[string]interface{}, prop string) []*bool {
+	val, err := GetBooleanPointerArray(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetBooleanPointerArrayOrDefault retrieves a property as a slice of bool pointers or returns a default value.
+func GetBooleanPointerArrayOrDefault(props map[string]interface{}, prop string, defaultValue []*bool) []*bool {
+	val, err := GetBooleanPointerArray(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// MustGetBooleanPointerArrayPtr retrieves a property as a pointer to a slice of bool pointers or panics.
+func MustGetBooleanPointerArrayPtr(props map[string]interface{}, prop string) *[]*bool {
+	val, err := GetBooleanPointerArrayPtr(props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetBooleanPointerArrayPtrOrDefault retrieves a property as a pointer to a slice of bool pointers or returns a default value.
+func GetBooleanPointerArrayPtrOrDefault(props map[string]interface{}, prop string, defaultValue *[]*bool) *[]*bool {
+	val, err := GetBooleanPointerArrayPtr(props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
