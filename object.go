@@ -169,3 +169,40 @@ func GetObjectPropOrDefaultAllowNull[T any](props map[string]interface{}, prop s
 	}
 	return &defaultValue
 }
+
+// GetMapOrDefault retrieves a map property or returns a default value.
+func GetMapOrDefault[K comparable, V any](props map[string]interface{}, prop string, defaultValue map[K]V) map[K]V {
+	val, err := GetMap[K, V](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
+
+// GetMapPtr retrieves a map property as a pointer.
+// Note: This returns a pointer to a copy of the map header. Mutating entries via (*p)[key] modifies the underlying map in props, but rebinding *p to a new map does not replace props[prop].
+func GetMapPtr[K comparable, V any](props map[string]interface{}, prop string) (*map[K]V, error) {
+	val, err := GetMap[K, V](props, prop)
+	if err != nil {
+		return nil, err
+	}
+	return &val, nil
+}
+
+// MustGetMapPtr retrieves a map property as a pointer or panics.
+func MustGetMapPtr[K comparable, V any](props map[string]interface{}, prop string) *map[K]V {
+	val, err := GetMapPtr[K, V](props, prop)
+	if err != nil {
+		panic(err)
+	}
+	return val
+}
+
+// GetMapPtrOrDefault retrieves a map property as a pointer or returns a default value.
+func GetMapPtrOrDefault[K comparable, V any](props map[string]interface{}, prop string, defaultValue *map[K]V) *map[K]V {
+	val, err := GetMapPtr[K, V](props, prop)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}
