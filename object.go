@@ -180,6 +180,7 @@ func GetMapOrDefault[K comparable, V any](props map[string]interface{}, prop str
 }
 
 // GetMapPtr retrieves a map property as a pointer.
+// Note: This returns a pointer to a copy of the map header. Mutating entries via (*p)[key] modifies the underlying map in props, but rebinding *p to a new map does not replace props[prop].
 func GetMapPtr[K comparable, V any](props map[string]interface{}, prop string) (*map[K]V, error) {
 	val, err := GetMap[K, V](props, prop)
 	if err != nil {
